@@ -24,7 +24,6 @@ public class Socks4CommandHandler extends ChannelInboundHandlerAdapter {
     private ChannelFuture connectedFuture = null;
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object message) throws Exception {
-        log.info(message.toString());
         if (message instanceof Socks4CommandRequest msg) {
             Socks4CommandType commandType = msg.type();
             if (commandType.equals(Socks4CommandType.CONNECT)) {
@@ -38,7 +37,11 @@ public class Socks4CommandHandler extends ChannelInboundHandlerAdapter {
             if (connectedFuture == null) {
                 return;
             }
-            connectedFuture.channel().writeAndFlush(message);
+            connectedFuture.addListener(future -> {
+                if (future.isSuccess()) {
+                    connectedFuture.channel().writeAndFlush(message);
+                }
+            });
         }
     }
 
@@ -63,8 +66,8 @@ public class Socks4CommandHandler extends ChannelInboundHandlerAdapter {
                 ctx.channel().writeAndFlush(response);
             }
             else {
-                DefaultSocks4CommandResponse commandResponse = new DefaultSocks4CommandResponse(Socks4CommandStatus.IDENTD_UNREACHABLE);
-                ctx.channel().writeAndFlush(commandResponse);
+                DefaultSocks4CommandResponse response = new DefaultSocks4CommandResponse(Socks4CommandStatus.IDENTD_UNREACHABLE);
+                ctx.channel().writeAndFlush(response);
             }
         });
     }
@@ -78,5 +81,6 @@ public class Socks4CommandHandler extends ChannelInboundHandlerAdapter {
         if (connectedFuture != null) {
             connectedFuture.channel().close();
         }
+        super.channelInactive(ctx);
     }
 }

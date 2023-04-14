@@ -39,18 +39,26 @@ public class SocksShakerHandler extends ChannelInboundHandlerAdapter {
             ctx.fireChannelRead(msg);
             ctx.pipeline().remove(this);
         }
-        else {
+        else if (version == null) {
             ctx.channel().close();
         }
     }
 
     private void handlerSocks4Command(ChannelHandlerContext ctx, Socks4CommandRequest request) {
+        version = request.version();
         ctx.pipeline().addAfter(NAME, Socks4CommandHandler.NAME, new Socks4CommandHandler());
         ctx.pipeline().remove(this);
         ctx.fireChannelRead(request);
     }
 
     private void handlerPasswordRequest(ChannelHandlerContext ctx, Socks5PasswordAuthRequest passwordAuthRequest) {
+        if (method == null ||
+                version == null ||
+                !method.equals(Socks5AuthMethod.PASSWORD) ||
+                !version.equals(passwordAuthRequest.version())) {
+            ctx.channel().close();
+            return;
+        }
         String password = passwordAuthRequest.password();
         String username = passwordAuthRequest.username();
         Socks5PasswordAuthStatus status = null;
