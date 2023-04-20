@@ -1,6 +1,5 @@
-package com.socks.server.handler;
+package com.server.socks.handler;
 
-import com.socks.server.enums.Events;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import lombok.extern.slf4j.Slf4j;

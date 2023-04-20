@@ -23,6 +23,16 @@
             <version>4.1.77.Final</version>
         </dependency>
         <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec-dns</artifactId>
+            <version>4.1.72.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec-http</artifactId>
+            <version>4.1.77.Final</version>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.24</version>
@@ -30,7 +40,7 @@
         </dependency>
     </dependencies>
     <build>
-        <finalName>socks-proxy</finalName>
+        <finalName>wutao-proxy</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -48,7 +58,7 @@
                     <archive>
                         <manifest>
                             <mainClass>
-                                com.socks.server.SocksServer
+                                com.server.ProxyServer
                             </mainClass>
                             <classpathPrefix>lib/</classpathPrefix>
                             <addClasspath>true</addClasspath>

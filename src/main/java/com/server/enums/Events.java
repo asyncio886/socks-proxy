@@ -1,4 +1,4 @@
-package com.socks.server.enums;
+package com.server.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,7 +1,7 @@
-package com.socks.server;
+package com.server.socks;
 
-import com.socks.server.handler.EventAndExceptionHandler;
-import com.socks.server.handler.SocksShakerHandler;
+import com.server.socks.handler.EventAndExceptionHandler;
+import com.server.socks.handler.SocksShakerHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.socksx.SocksPortUnificationServerHandler;

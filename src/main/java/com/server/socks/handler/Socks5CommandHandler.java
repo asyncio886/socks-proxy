@@ -1,5 +1,6 @@
-package com.socks.server.handler;
+package com.server.socks.handler;
 
+import com.server.common.ConnectThreadPool;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;

@@ -1,13 +1,14 @@
-package com.socks.server.handler;
+package com.server.socks.handler;
 
-import com.socks.server.enums.Events;
+import com.server.ConfigLoader;
+import com.server.enums.Events;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.socksx.SocksVersion;
 import io.netty.handler.codec.socksx.v4.Socks4CommandRequest;
 import io.netty.handler.codec.socksx.v5.*;
 import lombok.extern.slf4j.Slf4j;
-import static com.socks.server.ConfigLoader.SERVER_CONFIG;
+
 import java.util.List;
 
 /**
@@ -19,8 +20,8 @@ public class SocksShakerHandler extends ChannelInboundHandlerAdapter {
     public static final String NAME = "socks_shaker_handler";
     private SocksVersion version = null;
     private Socks5AuthMethod method = null;
-    private final String _username = SERVER_CONFIG.getUsername();
-    private final String _password = SERVER_CONFIG.getPassword();
+    private final String _username = ConfigLoader.SERVER_CONFIG.getUsername();
+    private final String _password = ConfigLoader.SERVER_CONFIG.getPassword();
     boolean usePassword = false;
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
