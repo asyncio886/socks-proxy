@@ -1,11 +1,13 @@
 package com.server.socks;
 
-import com.server.ConfigLoader;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.InetSocketAddress;
+
+import static com.server.ConfigLoader.SERVER_CONFIG;
 import static com.server.common.ConnectThreadPool.BOSS;
 import static com.server.common.ConnectThreadPool.WORKERS;
 
@@ -23,9 +25,13 @@ public class SocksProxyServer {
         SOCKS_SERVER.childHandler(INIT_HANDLER);
         SOCKS_SERVER.option(ChannelOption.SO_TIMEOUT, 20);
         SOCKS_SERVER.group(BOSS, WORKERS);
-        SOCKS_SERVER.bind(ConfigLoader.SERVER_CONFIG.getSocksPort()).addListener(future -> {
+        SOCKS_SERVER.bind(SERVER_CONFIG.getSocksPort())
+                .addListener(future -> {
             if (future.isSuccess()) {
-                log.info("socksServer start in port " + ConfigLoader.SERVER_CONFIG.getSocksPort());
+                log.info("socksServer start in " + SERVER_CONFIG.getSocksPort());
+            }
+            else {
+                log.info("socks start error");
             }
         });
     }

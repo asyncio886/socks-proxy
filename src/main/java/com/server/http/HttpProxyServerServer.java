@@ -1,5 +1,6 @@
 package com.server.http;
 
+import com.server.common.ConnectThreadPool;
 import com.server.http.DecodedHttpRequest;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -13,6 +14,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.InetSocketAddress;
 import java.util.Base64;
 
 import static com.server.ConfigLoader.SERVER_CONFIG;
@@ -25,7 +27,7 @@ import static com.server.common.ConnectThreadPool.WORKERS;
  */
 @Slf4j
 public class HttpProxyServerServer {
-    public static final NioEventLoopGroup CLIENT_LOOP = new NioEventLoopGroup();
+    public static final NioEventLoopGroup CLIENT_LOOP = ConnectThreadPool.CLIENT_EVENT_LOOP;
     static final String SERVER_CODEC = "serverCodec";
     static final String AGGREGATOR_NAME = "aggregator";
     static final String CLIENT_CODEC = "clientCodec";
@@ -40,7 +42,7 @@ public class HttpProxyServerServer {
         server.bind(SERVER_CONFIG.getHttpPort())
                 .addListener(future -> {
                     if (future.isSuccess()) {
-                        log.info("http proxy started on port " + SERVER_CONFIG.getHttpPort());
+                        log.info("http proxy started on " + SERVER_CONFIG.getHttpPort());
                     }
                     else {
                         log.info("http proxy start error" );
@@ -63,6 +65,10 @@ public class HttpProxyServerServer {
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
             if (msg instanceof FullHttpRequest request) {
+                if (request.decoderResult().isFailure()) {
+                    ctx.channel().close();
+                    log.info("请求解析错误");
+                }
                 if (!isIdentified(request)) {
                     ctx.channel().writeAndFlush(DecodedHttpRequest.identifiedError())
                             .addListener(future -> ctx.channel().close());
@@ -138,10 +144,16 @@ public class HttpProxyServerServer {
         }
 
         private boolean isIdentified(FullHttpRequest request) {
+            log.info("headers is " + request.headers());
+            if (!request.method().equals(HttpMethod.CONNECT)) {
+                return true;
+            }
             if (!SERVER_CONFIG.isUseHttpPassword()) {
                 return true;
             }
-            String s = request.headers().get(HttpHeaderNames.PROXY_AUTHENTICATE);
+            log.info("header is " + request.headers());
+            String s ;
+            s = request.headers().get(HttpHeaderNames.PROXY_AUTHORIZATION);
             if (null == s) {
                 return false;
             }

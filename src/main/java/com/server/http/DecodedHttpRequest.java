@@ -16,13 +16,16 @@ public class DecodedHttpRequest implements FullHttpRequest {
     private String host = null;
     private Integer port = null;
     private String decodedHost = null;
+    private static final String AUTHENTICATE_TYPE = "Basic";
 
     public static DefaultFullHttpResponse connectSuccessResponse() {
         return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
     }
 
     public static DefaultFullHttpResponse identifiedError() {
-        return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.PROXY_AUTHENTICATION_REQUIRED);
+        DefaultFullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.PROXY_AUTHENTICATION_REQUIRED);
+        response.headers().set(HttpHeaderNames.WWW_AUTHENTICATE, AUTHENTICATE_TYPE);
+        return response;
     }
 
 

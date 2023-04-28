@@ -18,21 +18,23 @@ import java.util.List;
 @Slf4j
 public class SocksShakerHandler extends ChannelInboundHandlerAdapter {
     public static final String NAME = "socks_shaker_handler";
+    private static final String PASSWORD_REQUEST_DECODER_NAME = "password_socks5_decoder";
     private SocksVersion version = null;
     private Socks5AuthMethod method = null;
     private final String _username = ConfigLoader.SERVER_CONFIG.getUsername();
     private final String _password = ConfigLoader.SERVER_CONFIG.getPassword();
-    boolean usePassword = false;
+    boolean usePassword = ConfigLoader.SERVER_CONFIG.isUsePassword();
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        log.info(msg.toString());
         if (msg instanceof Socks4CommandRequest request) {
             handlerSocks4Command(ctx, request);
         }
-        if (msg instanceof Socks5InitialRequest request) {
-            handlerSocks5InitRequest(ctx, request);
-        }
         else if (msg instanceof Socks5PasswordAuthRequest passwordAuthRequest) {
             handlerPasswordRequest(ctx, passwordAuthRequest);
+        }
+        else if (msg instanceof Socks5InitialRequest request) {
+            handlerSocks5InitRequest(ctx, request);
         }
         else if (msg instanceof Socks5CommandRequest) {
             String currentCtxName = ctx.name();
@@ -53,6 +55,7 @@ public class SocksShakerHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void handlerPasswordRequest(ChannelHandlerContext ctx, Socks5PasswordAuthRequest passwordAuthRequest) {
+        log.info("password request is " + passwordAuthRequest);
         if (method == null ||
                 version == null ||
                 !method.equals(Socks5AuthMethod.PASSWORD) ||
@@ -62,7 +65,7 @@ public class SocksShakerHandler extends ChannelInboundHandlerAdapter {
         }
         String password = passwordAuthRequest.password();
         String username = passwordAuthRequest.username();
-        Socks5PasswordAuthStatus status = null;
+        Socks5PasswordAuthStatus status;
         if (_username.equals(username) && _password.equals(password)) {
             status = Socks5PasswordAuthStatus.SUCCESS;
         }
@@ -70,7 +73,12 @@ public class SocksShakerHandler extends ChannelInboundHandlerAdapter {
             status = Socks5PasswordAuthStatus.FAILURE;
         }
         Socks5PasswordAuthResponse response = new DefaultSocks5PasswordAuthResponse(status);
-        ctx.channel().writeAndFlush(response);
+        ctx.channel().writeAndFlush(response).addListener(future -> {
+            if (future.isSuccess()) {
+                ctx.pipeline().remove(PASSWORD_REQUEST_DECODER_NAME);
+                ctx.pipeline().addBefore(ctx.name(), "socks5_command_decoder", new Socks5CommandRequestDecoder());
+            }
+        });;
     }
 
     private void handlerSocks5InitRequest(ChannelHandlerContext ctx, Socks5InitialRequest request) {
@@ -89,7 +97,7 @@ public class SocksShakerHandler extends ChannelInboundHandlerAdapter {
         Socks5InitialResponse response = new DefaultSocks5InitialResponse(method);
         ctx.channel().writeAndFlush(response).addListener(future -> {
             if (future.isSuccess()) {
-                ctx.pipeline().addBefore(ctx.name(), "socks5_command_decoder", new Socks5CommandRequestDecoder());
+                ctx.pipeline().addBefore(ctx.name(), PASSWORD_REQUEST_DECODER_NAME, new Socks5PasswordAuthRequestDecoder());
             }
         });
     }

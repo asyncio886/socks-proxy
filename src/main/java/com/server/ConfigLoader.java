@@ -3,6 +3,7 @@ package com.server;
 import lombok.Data;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 /**
@@ -42,8 +43,10 @@ public class ConfigLoader {
     private static final Properties PROPERTIES = new Properties();
     public static final ServerConfig SERVER_CONFIG = new ServerConfig();
     static {
+        InputStream resource = null;
         try {
-            PROPERTIES.load(ConfigLoader.class.getResourceAsStream("/server.config.properties"));
+            resource = ConfigLoader.class.getResourceAsStream("/server.config.properties");
+            PROPERTIES.load(resource);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -63,6 +66,12 @@ public class ConfigLoader {
         if (SERVER_CONFIG.isUseHttpPassword()) {
             SERVER_CONFIG.setHttpPassword(PROPERTIES.getProperty(HTTP_PASSWORD_KEY, ""));
             SERVER_CONFIG.setHttpUsername(PROPERTIES.getProperty(HTTP_USERNAME_KEY, ""));
+        }
+        try {
+            assert resource != null;
+            resource.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
